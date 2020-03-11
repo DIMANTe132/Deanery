@@ -1,0 +1,9 @@
+﻿  deanery.cpp
+  group.cpp
+C:\Users\Дима\Desktop\lab5\lab5\lab5\group.cpp(36,46): warning C4267:  инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\Дима\Desktop\lab5\lab5\lab5\group.cpp(74,46): warning C4267:  инициализация: преобразование из "size_t" в "int"; возможна потеря данных
+  main.cpp
+  student.cpp
+  Создание кода...
+C:\Users\Дима\Desktop\lab5\lab5\lab5\group.cpp(83,25): warning C4244:  +=: преобразование "double" в "float", возможна потеря данных
+  lab5.vcxproj -> C:\Users\Дима\Desktop\lab5\lab5\x64\Debug\lab5.exe

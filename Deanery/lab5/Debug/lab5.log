@@ -1,0 +1,13 @@
+﻿  deanery.cpp
+C:\Users\Дима\Desktop\lab5\lab5\lab5\deanery.cpp(85,21): warning C4018:  <: несоответствие типов со знаком и без знака
+C:\Users\Дима\Desktop\lab5\lab5\lab5\deanery.cpp(104,21): warning C4018:  <: несоответствие типов со знаком и без знака
+C:\Users\Дима\Desktop\lab5\lab5\lab5\deanery.cpp(136,21): warning C4018:  <: несоответствие типов со знаком и без знака
+C:\Users\Дима\Desktop\lab5\lab5\lab5\deanery.cpp(181,21): warning C4018:  <: несоответствие типов со знаком и без знака
+C:\Users\Дима\Desktop\lab5\lab5\lab5\deanery.cpp(209,21): warning C4018:  <: несоответствие типов со знаком и без знака
+C:\Users\Дима\Desktop\lab5\lab5\lab5\deanery.cpp(246,21): warning C4018:  <: несоответствие типов со знаком и без знака
+  group.cpp
+C:\Users\Дима\Desktop\lab5\lab5\lab5\deanery.cpp(281,20): warning C4018:  <: несоответствие типов со знаком и без знака
+  student.cpp
+  Создание кода...
+C:\Users\Дима\Desktop\lab5\lab5\lab5\group.cpp(83,25): warning C4244:  +=: преобразование "double" в "float", возможна потеря данных
+  lab5.vcxproj -> C:\Users\Дима\Desktop\lab5\lab5\Debug\lab5.exe
