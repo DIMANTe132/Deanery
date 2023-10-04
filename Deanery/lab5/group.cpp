@@ -12,13 +12,13 @@ Group::Group(const std::string& name) : title(name), head(nullptr) // Попра
 }
 
 
-bool Group::addStudent(std::shared_ptr<Student> student)
+bool Group::addStudent(std::shared_ptr<Student>& student, const std::shared_ptr<Group>& group)
 {
 	if (search(student->getId()) != nullptr) { // Замена стандартного поиска на наш
 		return false;   // this student has already been added to the group
 	}
 	else {
-		student->addToGroup(this);
+		student->addToGroup(group);
 		students.push_back(student);
 		return true;
 	}
@@ -33,7 +33,7 @@ void Group::selectHead()
 };
 
 
-void Group::selectHead(std::shared_ptr<Student> student)
+void Group::selectHead(std::shared_ptr<Student>& student)
 {
 	head = student;
 };

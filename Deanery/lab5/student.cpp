@@ -7,21 +7,21 @@
 
 int staticID = 0;
 
-Student::Student() : id(staticID), fio(""), group(nullptr) // Поправка конструктора
+Student::Student() : id(staticID), fio(""), group(std::weak_ptr<Group>()) // Поправка конструктора
 {
 	staticID++;
 }
 
 
-Student::Student(std::string FIO) : id(staticID), fio(FIO), group(nullptr) // Поправка конструктора
+Student::Student(const std::string& FIO) : id(staticID), fio(FIO), group(std::weak_ptr<Group>()) // Поправка конструктора
 {
 	staticID++;
 }
 
 
-bool Student::addToGroup(Group* group)
+bool Student::addToGroup(const std::weak_ptr<Group>& group)
 {
-	if (group->search(getId()) != nullptr) // Замена стандартного поиска на наш
+	if (group.lock()->search(getId()) != nullptr) // Замена стандартного поиска на наш
 		return false;
 	else
 	{
@@ -37,12 +37,12 @@ void Student::addMark(const int& mark)
 };
 
 
-void Student::addMark(std::vector<int> mark)
+void Student::addMark(const std::vector<int>& mark)
 {
 	marks = mark;
 };
 
-float Student::getAverage()
+float Student::getAverage() const
 {
 	if (marks.empty())
 		return 0;
@@ -51,7 +51,7 @@ float Student::getAverage()
 };
 
 
-int Student::getId()
+int Student::getId() const
 {
 	return id;
 }
@@ -90,13 +90,13 @@ std::string Student::getMarksForWrite() const
 }
 
 
-Group* Student::getGroup()
+std::weak_ptr<Group>& Student::getGroup()
 {
 	return group;
 }
 
 
-void Student::setID(std::string ID)
+void Student::setID(const std::string& ID)
 {
 	std::stringstream ss;
 	ss << ID;

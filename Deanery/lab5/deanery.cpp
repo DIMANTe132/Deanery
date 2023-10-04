@@ -9,7 +9,7 @@
 //class Group; // Лишнее forward declaration
 
 
-std::vector<std::string> split(const std::string& s, char delimiter)
+std::vector<std::string> split(const std::string& s, const char& delimiter)
 {
 	std::vector<std::string> result;
 	std::string token;
@@ -24,7 +24,7 @@ std::vector<std::string> split(const std::string& s, char delimiter)
 }
 
 
-std::vector<int> readMarks(std::string Marks)
+std::vector<int> readMarks(const std::string& Marks)
 {
 	std::vector<int> marks;
 	std::stringstream str;
@@ -108,7 +108,7 @@ Deanery::Deanery()  // read file, create groups
 		{
 			std::shared_ptr<Group> group(new Group(info[1]));
 			groups.push_back(group);
-			group->addStudent(student); // Добавляем студента в группу, а не наоборот (и так во всем файле)
+			group->addStudent(student, group); // Добавляем студента в группу, а не наоборот (и так во всем файле)
 
 			if (info[2] == "Head")
 				group->selectHead(student);
@@ -122,7 +122,7 @@ Deanery::Deanery()  // read file, create groups
 			{
 				if (group->getTitle() == info[1])
 				{
-					group->addStudent(student);
+					group->addStudent(student, group);
 					addedToGroup = true;
 
 					if (info[2] == "Head")
@@ -134,7 +134,7 @@ Deanery::Deanery()  // read file, create groups
 			{
 				std::shared_ptr<Group> group(new Group(info[1]));
 				groups.push_back(group);
-				group->addStudent(student);
+				group->addStudent(student, group);
 
 				if (info[2] == "Head")
 					group->selectHead(student);
@@ -186,22 +186,19 @@ void Deanery::statistics() const // average mark for each student, average mark 
 
 void Deanery::changeGroup()
 {
-	int ID;
-	std::string title;
+	int id;
 	size_t i;
 	bool searchStudent = false;
 	std::shared_ptr<Student> student;
 
 	std::cout << "Enter the ID of student: ";
-	std::cin >> ID;
-	std::cout << "Enter the group to transfer the student to: ";
-	std::cin >> title;
+	std::cin >> id;
 
 	for (auto& group : groups)
 	{
 		for (i = 0; i < group->getStudentsCount(); i++)
 		{
-			if (group->getStudent(i)->getId() == ID)
+			if (group->getStudent(i)->getId() == id)
 			{
 				student = group->getStudent(i);
 				searchStudent = true;
@@ -212,24 +209,27 @@ void Deanery::changeGroup()
 			break;
 	}
 
-	if (searchStudent == false)
+	if (!searchStudent)
 	{
 		std::wcout << "Student was not found" << std::endl;
 		return;
 	}
 
+	std::string title;
+	std::cout << "Enter the group to transfer the student to: ";
+	std::cin >> title;
 	for (auto& group : groups)
 	{
 		if (title == group->getTitle())
 		{
-			if (student->getGroup() == group.get())
+			if (student->getGroup().lock().get() == group.get())
 			{
 				std::cout << "Student is already in this group" << std::endl;
 			}
 			else
 			{
-				student->getGroup()->expellStudent(i);
-				group->addStudent(student);
+				student->getGroup().lock()->expellStudent(i);
+				group->addStudent(student, group);
 
 				std::cout << "Group was changed" << std::endl;
 			}
@@ -245,12 +245,14 @@ void Deanery::expellStudents()  // if average mark < thresh
 {
 	for (auto& group : groups)
 	{
-		for (size_t i = 0; i < group->getStudentsCount(); i++)
+		if (group->getStudentsCount() > 0)
 		{
-			if (group->getStudent(i)->getAverage() < 4 && group->getStudent(i)->getAverage() != 0)
+			for (size_t i = group->getStudentsCount() - 1; i > 0; i--)
 			{
-				group->expellStudent(i);
-				i--;
+				if (group->getStudent(i)->getAverage() < 4 && group->getStudent(i)->getAverage() != 0)
+				{
+					group->expellStudent(i);
+				}
 			}
 		}
 	}
