@@ -1,13 +1,79 @@
-#include "deanery.h"
+﻿#include "deanery.h"
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <string>
+#include <vector>
+#include <time.h>
 
-class Group;
+//class Group; // Лишнее forward declaration
+
+
+std::vector<std::string> split(const std::string& s, char delimiter)
+{
+	std::vector<std::string> result;
+	std::string token;
+	std::istringstream tokenStream(s);
+
+	while (std::getline(tokenStream, token, delimiter))
+	{
+		result.push_back(token);
+	}
+
+	return result;
+}
+
+
+std::vector<int> readMarks(std::string Marks)
+{
+	std::vector<int> marks;
+	std::stringstream str;
+	int mark;
+
+	for (size_t i = 0; i < Marks.length(); i++)
+	{
+		if (Marks[i] == '1')
+		{
+			if (Marks[i + 1])
+			{
+				if (Marks[i + 1] == '0')
+				{
+					str << Marks[i] << Marks[i + 1];
+					str >> mark;
+					marks.push_back(mark);
+					i++;
+				}
+				else
+				{
+					str << Marks[i];
+					str >> mark;
+					marks.push_back(mark);
+				}
+			}
+			else
+			{
+				str << Marks[i];
+				str >> mark;
+				marks.push_back(mark);
+			}
+		}
+		else
+		{
+			str << Marks[i];
+			str >> mark;
+			marks.push_back(mark);
+		}
+		str = std::stringstream();
+	}
+	return marks;
+}
+
 
 Deanery::Deanery()  // read file, create groups
 {
-	std::ifstream file("students.txt");
+	std::string path("students.txt"); // Вынос пути в отдельную переменную
+
+	std::ifstream file(path);
 
 	if (!file)
 	{
@@ -31,7 +97,7 @@ Deanery::Deanery()  // read file, create groups
 
 		std::vector<std::string> info = split(s, ':');
 
-		Student* student = new Student(info[0]);   // info[0] - FIO
+		std::shared_ptr<Student> student(new Student(info[0]));   // info[0] - FIO
 
 		student->setID(info[4]);
 
@@ -40,9 +106,9 @@ Deanery::Deanery()  // read file, create groups
 
 		if (groups.empty())
 		{
-			Group* group = new Group(info[1]);
+			std::shared_ptr<Group> group(new Group(info[1]));
 			groups.push_back(group);
-			student->addToGroup(group);
+			group->addStudent(student); // Добавляем студента в группу, а не наоборот (и так во всем файле)
 
 			if (info[2] == "Head")
 				group->selectHead(student);
@@ -52,11 +118,11 @@ Deanery::Deanery()  // read file, create groups
 		{
 			bool addedToGroup = false;
 
-			for (Group* group : groups)
+			for (auto& group : groups) // Замена в foreach тип на auto (во всем проекте)
 			{
 				if (group->getTitle() == info[1])
 				{
-					student->addToGroup(group);
+					group->addStudent(student);
 					addedToGroup = true;
 
 					if (info[2] == "Head")
@@ -66,9 +132,9 @@ Deanery::Deanery()  // read file, create groups
 
 			if (addedToGroup == false)
 			{
-				Group* group = new Group(info[1]);
+				std::shared_ptr<Group> group(new Group(info[1]));
 				groups.push_back(group);
-				student->addToGroup(group);
+				group->addStudent(student);
 
 				if (info[2] == "Head")
 					group->selectHead(student);
@@ -80,12 +146,12 @@ Deanery::Deanery()  // read file, create groups
 
 void Deanery::addRandomMarks()
 {
-	for (Group* group : groups)
+	for (auto& group : groups)
 	{
-		for (int i = 0; i < group->students.size(); i++)
+		for (int i = 0; i < group->getStudentsCount(); i++)
 		{
 			int newMark = rand() % 10 + 1;
-			group->students[i]->addMark(newMark);
+			group->getStudent(i)->addMark(newMark);
 		}
 	}
 
@@ -93,17 +159,17 @@ void Deanery::addRandomMarks()
 }
 
 
-void Deanery::statistics()  // average mark for each student, average mark for each group
+void Deanery::statistics() const // average mark for each student, average mark for each group
 {
 	std::cout << "Student statistics:" << std::endl;
 
-	for (Group* group : groups) 
+	for (auto& group : groups) 
 	{
 		std::cout << group->getTitle() << ":" << std::endl;
 
-		for (int i = 0; i < group->students.size(); i++)
+		for (int i = 0; i < group->getStudentsCount(); i++)
 		{
-			std::cout << i + 1 << ": " << group->students[i]->getFIO() << ": " << group->students[i]->getAverage() << std::endl;
+			std::cout << i + 1 << ": " << group->getStudent(i)->getFIO() << ": " << group->getStudent(i)->getAverage() << std::endl;
 		}
 
 		std::cout << std::endl;
@@ -111,7 +177,7 @@ void Deanery::statistics()  // average mark for each student, average mark for e
 
 	std::cout << "Group statistics:" << std::endl;
 
-	for (Group* group : groups) 
+	for (auto& group : groups) 
 	{
 		std::cout << group->getTitle() << ": " << group->getGroupAverage() << std::endl;
 	}
@@ -121,27 +187,29 @@ void Deanery::statistics()  // average mark for each student, average mark for e
 void Deanery::changeGroup()
 {
 	int ID;
-	int k;
 	std::string title;
+	size_t i;
 	bool searchStudent = false;
-	Student* student = new Student();
+	std::shared_ptr<Student> student;
 
 	std::cout << "Enter the ID of student: ";
 	std::cin >> ID;
 	std::cout << "Enter the group to transfer the student to: ";
 	std::cin >> title;
 
-	for (Group* group : groups)
+	for (auto& group : groups)
 	{
-		for (int i = 0; i < group->students.size(); i++)
+		for (i = 0; i < group->getStudentsCount(); i++)
 		{
-			if (group->students[i]->getId() == ID)
+			if (group->getStudent(i)->getId() == ID)
 			{
-				student = group->students[i];
+				student = group->getStudent(i);
 				searchStudent = true;
-				k = i;
+				break;
 			}
-		}	
+		}
+		if (searchStudent)
+			break;
 	}
 
 	if (searchStudent == false)
@@ -150,23 +218,22 @@ void Deanery::changeGroup()
 		return;
 	}
 
-	for (Group* group : groups)
+	for (auto& group : groups)
 	{
 		if (title == group->getTitle())
 		{
-			if (student->getGroup() == group)
+			if (student->getGroup() == group.get())
 			{
 				std::cout << "Student is already in this group" << std::endl;
 			}
-
 			else
 			{
-				student->getGroup()->expellStudent(k);
-				student->addToGroup(group);
+				student->getGroup()->expellStudent(i);
+				group->addStudent(student);
 
 				std::cout << "Group was changed" << std::endl;
-				return;
 			}
+			return;
 		}
 	}
 	std::cout << "Group was not found" << std::endl;
@@ -176,13 +243,13 @@ void Deanery::changeGroup()
 
 void Deanery::expellStudents()  // if average mark < thresh
 {
-	for (Group* group : groups)
+	for (auto& group : groups)
 	{
-		for (int i = 0; i < group->students.size(); i++)
+		for (size_t i = 0; i < group->getStudentsCount(); i++)
 		{
-			if (group->students[i]->getAverage() < 4 && group->students[i]->getAverage() != 0)
+			if (group->getStudent(i)->getAverage() < 4 && group->getStudent(i)->getAverage() != 0)
 			{
-				group->expellStudent(group->students[i], i);
+				group->expellStudent(i);
 				i--;
 			}
 		}
@@ -192,9 +259,10 @@ void Deanery::expellStudents()  // if average mark < thresh
 }
 
 
-void Deanery::save()
+void Deanery::save() const
 {
-	std::ofstream file("students.txt");
+	std::string path("students.txt"); // Вынос пути в отдельную переменную
+	std::ofstream file(path);
 
 	if (!file)
 	{
@@ -202,19 +270,19 @@ void Deanery::save()
 		return;
 	}
 
-	for (Group* group : groups)
+	for (auto& group : groups)
 	{
-		Student* head = group->getHead();
+		std::shared_ptr<Student> head = group->getHead();
 
-		for (int i = 0; i < group->students.size(); i++)
+		for (int i = 0; i < group->getStudentsCount(); i++)
 		{
-			file << group->students[i]->getFIO() << ":" << group->getTitle() << ":";
+			file << group->getStudent(i)->getFIO() << ":" << group->getTitle() << ":";
 
-			if (group->students[i] == head)
-				file << "Head" << ":" << group->students[i]->getMarksForWrite() << ":" << group->students[i]->getId() << " " << std::endl;
+			if (group->getStudent(i) == head)
+				file << "Head" << ":" << group->getStudent(i)->getMarksForWrite() << ":" << group->getStudent(i)->getId() << " " << std::endl;
 
 			else
-				file << ":" << group->students[i]->getMarksForWrite() << ":" << group->students[i]->getId() << " " << std::endl;
+				file << ":" << group->getStudent(i)->getMarksForWrite() << ":" << group->getStudent(i)->getId() << " " << std::endl;
 		}
 	}
 
@@ -225,7 +293,7 @@ void Deanery::save()
 
 void Deanery::selectHead()
 {
-	for (Group* group : groups)
+	for (auto& group : groups)
 	{
 		group->selectHead();
 	}
@@ -234,86 +302,23 @@ void Deanery::selectHead()
 };
 
 
-void Deanery::printData()
+void Deanery::printData() const
 {
 	std::cout << "Student data:" << std::endl;
 
-	for (Group* group : groups)
+	for (auto& group : groups)
 	{
 		std::cout << group->getTitle() << ":" << std::endl;
-		Student* head = group->getHead();
 
-		for (int i = 0; i < group->students.size(); i++)
+		for (int i = 0; i < group->getStudentsCount(); i++)
 		{
-			if (group->students[i] == head)
-				std::cout << "ID: " << group->students[i]->getId() << ": " << group->students[i]->getFIO() << ": " << group->students[i]->getMarksForPrint() << " - Head" << std::endl;
+			if (group->getStudent(i) == group->getHead())
+				std::cout << "ID: " << group->getStudent(i)->getId() << ": " << group->getStudent(i)->getFIO() << ": " << group->getStudent(i)->getMarksForPrint() << " - Head" << std::endl;
 			
 			else
-				std::cout << "ID: " << group->students[i]->getId() << ": " << group->students[i]->getFIO() << ": " << group->students[i]->getMarksForPrint() << std::endl;
+				std::cout << "ID: " << group->getStudent(i)->getId() << ": " << group->getStudent(i)->getFIO() << ": " << group->getStudent(i)->getMarksForPrint() << std::endl;
 		}
 
 		std::cout << std::endl;
 	}
 };
-
-
-std::vector<std::string> Deanery::split(const std::string& s, char delimiter)
-{
-	std::vector<std::string> result;
-	std::string token;
-	std::istringstream tokenStream(s);
-
-	while (std::getline(tokenStream, token, delimiter))
-	{
-		result.push_back(token);
-	}
-
-	return result;
-}
-
-
-std::vector<int> Deanery::readMarks(std::string Marks)
-{
-	std::vector<int> marks;
-	std::stringstream str;
-	int mark;
-
-	for (int i = 0; i < Marks.length(); i++)
-	{
-		if (Marks[i] == '1')
-		{
-			if (Marks[i + 1])
-			{
-				if (Marks[i + 1] == '0')
-				{
-					str << Marks[i] << Marks[i + 1];
-					str >> mark;
-					marks.push_back(mark);
-					i++;
-				}
-
-				else
-				{
-					str << Marks[i];
-					str >> mark;
-					marks.push_back(mark);
-				}
-			}
-
-			else
-			{
-				str << Marks[i];
-				str >> mark;
-				marks.push_back(mark);
-			}
-		}
-		else
-		{
-			str << Marks[i];
-			str >> mark;
-			marks.push_back(mark);
-		}
-		str = std::stringstream();
-	}
-	return marks;
-}

@@ -1,80 +1,73 @@
-#include <string>
-#include "student.h"
+﻿#include "student.h"
 #include "group.h"
+#include <string>
 #include <numeric>
 #include <sstream>
 
 
-class group;
-
 int staticID = 0;
 
-Student::Student()
+Student::Student() : id(staticID), fio(""), group(nullptr) // Поправка конструктора
 {
-
+	staticID++;
 }
 
 
-Student::Student(std::string FIO)
+Student::Student(std::string FIO) : id(staticID), fio(FIO), group(nullptr) // Поправка конструктора
 {
-	this->fio = FIO;
-	this->id = staticID;
 	staticID++;
 }
 
 
 bool Student::addToGroup(Group* group)
 {
-	if (std::find(group->students.begin(), group->students.end(), this) != group->students.end())
-	{
+	if (group->search(getId()) != nullptr) // Замена стандартного поиска на наш
 		return false;
-	}
 	else
 	{
-		this->group = group;
-		group->students.push_back(this);
+		this->group = group; // Не имеет смысла добавлять студента здесь + при вызове Group::addStudent студет добавится дважды
 		return true;
 	};
 };
 
 
-void Student::addMark(int mark)
+void Student::addMark(const int& mark)
 {
-	this->marks.push_back(mark);
+	marks.push_back(mark);
 };
 
 
 void Student::addMark(std::vector<int> mark)
 {
-	this->marks = mark;
+	marks = mark;
 };
 
-double Student::getAverage()
+float Student::getAverage()
 {
-	if (this->marks.empty())
+	if (marks.empty())
 		return 0;
 	else
-		return std::accumulate(this->marks.begin(), this->marks.end(), 0.0)/this->marks.size();
+		return std::accumulate(marks.begin(), marks.end(), float(0.0))/marks.size();
 };
 
 
 int Student::getId()
 {
-	return this->id;
+	return id;
 }
 
 
-std::string Student::getFIO()
+std::string Student::getFIO() const
 {
-	return this->fio;
+	return fio;
 }
 
 
-std::string Student::getMarksForPrint()
+std::string Student::getMarksForPrint() const
 {
 	std::string str = "";
 	std::stringstream ss;
-	for (int i : marks)
+	for (const int& i : marks)
 	{
 		ss << i;
 		ss << " ";
@@ -84,11 +77,11 @@ std::string Student::getMarksForPrint()
 }
 
 
-std::string Student::getMarksForWrite()
+std::string Student::getMarksForWrite() const
 {
 	std::string str = "";
 	std::stringstream ss;
-	for (int i : marks)
+	for (const int& i : marks)
 	{
 		ss << i;
 		str = ss.str();
@@ -99,7 +92,7 @@ std::string Student::getMarksForWrite()
 
 Group* Student::getGroup()
 {
-	return this->group;
+	return group;
 }
 
 
@@ -107,5 +100,5 @@ void Student::setID(std::string ID)
 {
 	std::stringstream ss;
 	ss << ID;
-	ss >> this->id;
+	ss >> id;
 }

@@ -1,31 +1,34 @@
-#ifndef GROUP_H
+﻿#ifndef GROUP_H
 #define GROUP_H
 
+#include "student.h"
 #include <string>
 #include <vector>
+#include <memory>
 
-class Student;
 
 class Group
 {
 private:
 	std::string title;
-	Student * head;
+	std::shared_ptr<Student> head; // Переход на умные указатели (переписывание всех методов где работали с сырыми указателями)
+	std::vector<std::shared_ptr<Student>> students; // Перенос всех полей класса в private блок
 
 public:
-	std::vector<Student*> students;
 	Group();
-	Group(std::string);
-	bool addStudent(Student *);
+	Group(const std::string&);
+	bool addStudent(std::shared_ptr<Student>);
 	void selectHead();
-	void selectHead(Student*);
-	Student * search(std::string);
-	Student * search(int);
-	double getGroupAverage();
-	void expellStudent(Student* ,int);
-	void expellStudent(int);
-	std::string getTitle();
-	Student* getHead();
+	void selectHead(std::shared_ptr<Student>);
+	std::shared_ptr<Student> search(const std::string&);
+	std::shared_ptr<Student> search(const int&);
+	float getGroupAverage() const;
+	//void expellStudent(std::shared_ptr<Student>&, size_t&); // Две реализации этого метода можно объеденить
+	void expellStudent(const size_t&);
+	std::string getTitle() const;
+	std::shared_ptr<Student> getHead();
+	size_t getStudentsCount() const;
+	std::shared_ptr<Student> getStudent(const size_t& i);
 };
 
 

@@ -18,13 +18,13 @@ public:
 	Student();
 	Student(std::string);
 	bool addToGroup(Group *);
-	void addMark(int);
+	void addMark(const int&);
 	void addMark(std::vector<int>);
-	double getAverage();
+	float getAverage();
 	int getId();
-	std::string getFIO();
-	std::string getMarksForPrint();
-	std::string getMarksForWrite();
+	std::string getFIO() const;
+	std::string getMarksForPrint() const;
+	std::string getMarksForWrite() const;
 	Group* getGroup();
 	void setID(std::string);
 };
