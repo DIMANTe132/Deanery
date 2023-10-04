@@ -1,31 +1,25 @@
-#include "group.h"
-#include "student.h"
+﻿#include "group.h"
 #include <time.h>  
 
 
-class Student;
-
 Group::Group()
 {
-
 }
 
 
-Group::Group(std::string name)
+Group::Group(const std::string& name) : title(name), head(nullptr) // Поправка конструктора
 {
-	this->title = name;
-	Student* head = nullptr;
 }
 
 
-bool Group::addStudent(Student * student)
+bool Group::addStudent(std::shared_ptr<Student>& student, const std::shared_ptr<Group>& group)
 {
-	if (std::find(this->students.begin(), this->students.end(), student) != this->students.end()) {
+	if (search(student->getId()) != nullptr) { // Замена стандартного поиска на наш
 		return false;   // this student has already been added to the group
 	}
 	else {
-		student->addToGroup(this);
-		this->students.push_back(student);
+		student->addToGroup(group);
+		students.push_back(student);
 		return true;
 	}
 };
@@ -33,23 +27,23 @@ bool Group::addStudent(Student * student)
 
 void Group::selectHead()
 {
-	int numberOfStudents = this->students.size();
-	int index = rand() % numberOfStudents;
-	this->head = this->students.at(index);
+	size_t numberOfStudents = students.size();
+	size_t index = rand() % numberOfStudents;
+	head = students.at(index);
 };
 
 
-void Group::selectHead(Student* student)
+void Group::selectHead(std::shared_ptr<Student>& student)
 {
-	this->head = student;
+	head = student;
 };
 
 
-Student * Group::search(std::string fio)
+std::shared_ptr<Student> Group::search(const std::string& fio)
 {
-	for (Student* i : students) {
-		if (i->getFIO() == fio) {
-			return i;
+	for (auto& student : students) {
+		if (student->getFIO() == fio) {
+			return student;
 		}
 	}
 
@@ -57,11 +51,11 @@ Student * Group::search(std::string fio)
 };
 
 
-Student * Group::search(int id)
+std::shared_ptr<Student> Group::search(const int& id)
 {
-	for (Student* i : students) {
-		if (i->getId() == id) {
-			return i;
+	for (auto& student : students) {
+		if (student->getId() == id) {
+			return student;
 		}
 	}
 
@@ -69,9 +63,9 @@ Student * Group::search(int id)
 };
 
 
-double Group::getGroupAverage()
+float Group::getGroupAverage() const
 {
-	int numberOfStudents = this->students.size();
+	size_t numberOfStudents = students.size();
 
 	if (numberOfStudents == 0) {
 		return 0;
@@ -79,34 +73,39 @@ double Group::getGroupAverage()
 
 	float sum = 0;
 
-	for (auto i : this->students) {
-		sum += i->getAverage();
+	for (auto student : students) {
+		sum += student->getAverage();
 	}
 
 	return sum / numberOfStudents;
 };
 
 
-void Group::expellStudent(Student* student ,int i)
+void Group::expellStudent(const size_t& i)
 {
+	if (getStudent(i) == head)
+		head = nullptr;
 	students.erase(students.begin() + i);
-	delete student;
 };
 
 
-void Group::expellStudent(int i)
+std::string Group::getTitle() const
 {
-	this->students.erase(students.begin() + i);
-};
-
-
-std::string Group::getTitle()
-{
-	return this->title;
+	return title;
 }
 
 
-Student* Group::getHead()
+std::shared_ptr<Student> Group::getHead()
 {
-	return this->head;
+	return head;
+}
+
+size_t Group::getStudentsCount() const
+{
+	return students.size();
+}
+
+std::shared_ptr<Student> Group::getStudent(const size_t& i)
+{
+	return students[i];
 }
